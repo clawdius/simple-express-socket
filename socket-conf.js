@@ -9,18 +9,35 @@ const io = new Server(server, {
     }
 })
 
+let message = [];
+
 io.on('connection', (socket) => {
     console.log("user connected!");
+
+    socket.emit('welcome', message)
 
     socket.on('disconnect', () => {
         console.log("user disconnected!");
     });
 
-    socket.on('addMessage', (data) => {
+    socket.on('addMessage', (data, type) => {
         if (data.length > 0) {
-            io.emit('addMessage', data);
+            if (message.length >= 5) {
+                message.shift();
+            };
+
+            type === 'first' ? message.unshift(data) : message.push(data);
+
+            io.emit('addMessage', message);
         };
     });
+
+    socket.on('deleteMessage', (data) => {
+        if (message.length > 0) {
+            data === 'first' ? message.shift() : message.pop();
+            io.emit('deleteMessage', message)
+        }
+    })
 
 });
 

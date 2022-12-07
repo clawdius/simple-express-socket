@@ -12,11 +12,26 @@
 </head>
 
 <body class="d-flex justify-content-center align-items-center flex-column">
-    <div class="row w-50 justify-content-center">
+    <div class="row w-75 justify-content-center">
         <div id="messageList" class="col-6"></div>
         <div class="col-6 d-flex flex-column w-50 justify-content-center">
             <input type="text" id="message">
-            <button class="btn btn-primary my-2" onclick="addMessage()">Broadcast Message</button>
+            <div class="my-2 d-flex justify-content-between">
+                <div class="w-100 px-2">
+                    <div class="text-center">Delete</div>
+                    <div class="d-flex">
+                        <button class="btn btn-danger w-100 mx-1" onclick="deleteMessage('first')">First</button>
+                        <button class="btn btn-danger w-100 mx-1" onclick="deleteMessage('last')">Last</button>
+                    </div>
+                </div>
+                <div class="w-100 px-2">
+                    <div class="text-center">Add</div>
+                    <div class="d-flex">
+                        <button class="btn btn-primary w-100 mx-1" onclick="addMessage('first')">First</button>
+                        <button class="btn btn-primary w-100 mx-1" onclick="addMessage('last')">Last</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>
@@ -27,20 +42,48 @@
     let head = document.querySelector('#messageList');
     let message = document.querySelector('#message');
 
-    function addMessage() {
+    function addMessage(type) {
         if (message.value.length > 0) {
-            socket.emit('addMessage', message.value);
+            socket.emit('addMessage', message.value, type);
         } else {
-            alert('type something bruh')
+            alert('type something bruh');
         }
     };
 
-    socket.on('connection', () => {
-        console.log('Welcome to the public chat!')
+    function deleteMessage(type) {
+        let messageList = document.querySelectorAll('.list')
+        if (messageList.length < 1) {
+            alert('cant delete message!')
+        } else {
+            type === 'first' ? messageList[0].remove() : messageList[messageList.length - 1].remove();
+            socket.emit('deleteMessage', type);
+        }
+    }
+
+    function refreshData(data) {
+        head.innerHTML = '';
+
+        for (let i = 0; i < data.length; i++) {
+            if (i === data.length - 1) {
+                head.innerHTML += '<div class="my-2 list">' + data[i] + '</div>'
+            } else {
+                head.innerHTML += '<div class="my-2 list">' + data[i] + '</div>'
+            }
+        }
+    }
+
+    socket.on('welcome', (data) => {
+        for (let i = 0; i < data.length; i++) {
+            head.innerHTML += '<div class="my-2 list">' + data[i] + '</div>'
+        }
     })
 
     socket.on('addMessage', (data) => {
-        head.innerHTML += '<div class="my-2">' + data + '</div>'
+        refreshData(data);
+    })
+
+    socket.on('deleteMessage', (data) => {
+        refreshData(data);
     })
 </script>
 
